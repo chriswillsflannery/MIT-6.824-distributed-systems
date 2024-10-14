@@ -14,6 +14,8 @@ import (
 // Serial crawler
 //
 
+// we don't need to access fetched with a pointer
+// because map is passed by reference in go
 func Serial(url string, fetcher Fetcher, fetched map[string]bool) {
 	if fetched[url] {
 		return
@@ -60,6 +62,8 @@ func (fs *fetchState) testAndSet(url string) bool {
 	return r
 }
 
+// we need to access fetchState with a pointer because 
+// struct is NOT passed by reference automatically
 func ConcurrentMutex(url string, fetcher Fetcher, fs *fetchState) {
 	if fs.testAndSet(url) {
 		return
