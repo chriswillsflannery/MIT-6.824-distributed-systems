@@ -61,6 +61,16 @@ func (fs *fetchState) testAndSet(url string) bool {
 	fs.fetched[url] = true
 	return r
 }
+/*
+By creating a lock on fetchState which is passed by reference
+to all goroutines, we can ensure that when we create the mutex lock,
+all routines trying to access the "fetched" resource will respect
+the same lock.
+
+This way, we can ensuree that there is never a race condition between
+different threads trying to access the same value in the "fetched"
+at the same time.
+*/
 
 // we need to access fetchState with a pointer because 
 // struct is NOT passed by reference automatically
@@ -77,12 +87,17 @@ func ConcurrentMutex(url string, fetcher Fetcher, fs *fetchState) {
 		done.Add(1)
 		go func(u string) {
 			ConcurrentMutex(u, fetcher, fs)
-			done.Done()
+			done.Done() // decrement wait group counter by 1
 		}(u)
 	}
-	done.Wait()
+	done.Wait() // wait for all spawned goroutines to complete
 	return
 }
+/*
+Here, if some subroutine fails, done.Done() might not get called.
+We can fix this by deferring execution:
+defer done.Done()
+*/
 
 func makeState() *fetchState {
 	return &fetchState{fetched: make(map[string]bool)}
