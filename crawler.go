@@ -97,6 +97,15 @@ func ConcurrentMutex(url string, fetcher Fetcher, fs *fetchState) {
 Here, if some subroutine fails, done.Done() might not get called.
 We can fix this by deferring execution:
 defer done.Done()
+
+Additionally, we need to explicitly pass "u" as an argumetn to the 
+self invoked function. This is due to an implementation detail of Go
+where loop variables are re-used across iterations. So by the time
+the goroutines actually run, it's possible that the for loop has
+already completed, and all the goroutines will have a reference to the
+final value of "u" in the for loop. so by explicitly passing "u" as an
+arg, we make a copy of what "u" was at the time that the goroutine
+was invoked.
 */
 
 func makeState() *fetchState {
