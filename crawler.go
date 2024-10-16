@@ -150,6 +150,16 @@ func ConcurrentChannel(url string, fetcher Fetcher) {
 	}()
 	coordinator(ch, fetcher)
 }
+/*
+The purpose of creating channels here is that we can have one "main" thread of execution
+which keeps a reference to the "main" mapping of visited URLS. the main thread knows 
+which URLS have already been visited, and will only spin up a new worker thread if
+the URL which the worker thread needs to process, has not already been visited.
+
+Because the main thread handles lookups against the map, there is no need for a 
+mutex lock, since it is guaranteed that there is onyl ever a single thread (the main thread)]
+which is accessing the map at a given time.
+*/
 
 //
 // main
